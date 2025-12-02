@@ -16,7 +16,12 @@ function calculateVoronoiWithColors() {
 
   img.loadPixels();
 
-  voronoi = delaunay.voronoi([0, 0, width, height]);
+  voronoi = delaunay.voronoi([
+    imageDisplayArea.x, 
+    imageDisplayArea.y, 
+    imageDisplayArea.x + imageDisplayArea.w, 
+    imageDisplayArea.y + imageDisplayArea.h
+  ]);
   let polygons = voronoi.cellPolygons();
 
   voronoiCells = [];
@@ -49,8 +54,8 @@ function sampleColorFromPolygon(polygon) {
 
   for (let i = 0; i < polygon.length; i++) {
     let p = polygon[i];
-    let imgX = floor(map(p[0], 0, width, 0, img.width));
-    let imgY = floor(map(p[1], 0, height, 0, img.height));
+    let imgX = floor(map(p[0], imageDisplayArea.x, imageDisplayArea.x + imageDisplayArea.w, 0, img.width));
+    let imgY = floor(map(p[1], imageDisplayArea.y, imageDisplayArea.y + imageDisplayArea.h, 0, img.height));
     imgX = constrain(imgX, 0, img.width - 1);
     imgY = constrain(imgY, 0, img.height - 1);
 
@@ -71,8 +76,8 @@ function sampleColorFromPolygon(polygon) {
   cx /= polygon.length;
   cy /= polygon.length;
 
-  let imgX = floor(map(cx, 0, width, 0, img.width));
-  let imgY = floor(map(cy, 0, height, 0, img.height));
+  let imgX = floor(map(cx, imageDisplayArea.x, imageDisplayArea.x + imageDisplayArea.w, 0, img.width));
+  let imgY = floor(map(cy, imageDisplayArea.y, imageDisplayArea.y + imageDisplayArea.h, 0, img.height));
   imgX = constrain(imgX, 0, img.width - 1);
   imgY = constrain(imgY, 0, img.height - 1);
 

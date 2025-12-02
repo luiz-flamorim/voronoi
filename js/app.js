@@ -5,7 +5,10 @@ let imagePath = "./data/img.jpg";
 let imageLoaded = false;
 let voronoiCells = [];
 let exportButton;
+let loadImageButton;
+let fileInput;
 let numSites = 3000;
+let imageDisplayArea = { x: 0, y: 0, w: 0, h: 0 };
 
 // Loads image before setup
 function preload() {
@@ -15,6 +18,9 @@ function preload() {
       () => {
         console.log("Image loaded successfully");
         imageLoaded = true;
+        if (typeof resizeCanvasForImage === 'function') {
+          resizeCanvasForImage();
+        }
       },
       () => {
         console.error("Failed to load image. Please check the image path.");
@@ -30,20 +36,34 @@ function setup() {
   let canvas = createCanvas(windowWidth, windowHeight);
   canvas.parent("visualization");
 
-  for (let i = 0; i < numSites; i++) {
-    seedPoints[i] = createVector(random(width), random(height));
+  if (imageLoaded && img) {
+    resizeCanvasForImage();
+    generateSeedPoints();
+  } else {
+    imageDisplayArea.w = width;
+    imageDisplayArea.h = height;
+    imageDisplayArea.x = 0;
+    imageDisplayArea.y = 0;
+    generateSeedPoints();
   }
 
-  exportButton = createButton("Export as SVG");
+  fileInput = createFileInput(handleFileSelect);
+  fileInput.parent("button");
+  fileInput.attribute("accept", "image/*");
+  fileInput.style("display", "none");
+  
+  loadImageButton = createButton('<span class="material-icons">image</span> Load Image');
+  loadImageButton.parent("button");
+  loadImageButton.mousePressed(() => fileInput.elt.click());
+  loadImageButton.class("material-button");
+
+  exportButton = createButton('<span class="material-icons">download</span> Export as SVG');
   exportButton.parent("button");
   exportButton.mousePressed(exportSVG);
-  exportButton.style("padding", "10px 20px");
-  exportButton.style("font-size", "16px");
-  exportButton.style("cursor", "pointer");
-
-  delaunay = calculateDelaunay(seedPoints);
+  exportButton.class("material-button");
 
   if (imageLoaded && img) {
+    delaunay = calculateDelaunay(seedPoints);
     calculateVoronoiWithColors();
   }
 }
@@ -53,6 +73,7 @@ function draw() {
   background(0);
 
   if (imageLoaded && img && voronoiCells.length === 0) {
+    delaunay = calculateDelaunay(seedPoints);
     calculateVoronoiWithColors();
   }
 
@@ -71,6 +92,75 @@ function draw() {
     textAlign(CENTER, CENTER);
     textSize(20);
     text("Loading image...", width / 2, height / 2);
+  }
+}
+
+// Calculates canvas size and image display area to maintain aspect ratio
+function resizeCanvasForImage() {
+  if (!img) return;
+  
+  let imgAspect = img.width / img.height;
+  let availableWidth = windowWidth;
+  let availableHeight = windowHeight;
+  let canvasWidth, canvasHeight;
+  
+  if (img.width > img.height) {
+    canvasWidth = availableWidth;
+    canvasHeight = availableWidth / imgAspect;
+    if (canvasHeight > availableHeight) {
+      canvasHeight = availableHeight;
+      canvasWidth = availableHeight * imgAspect;
+    }
+  } else {
+    canvasHeight = availableHeight;
+    canvasWidth = availableHeight * imgAspect;
+    if (canvasWidth > availableWidth) {
+      canvasWidth = availableWidth;
+      canvasHeight = availableWidth / imgAspect;
+    }
+  }
+  
+  resizeCanvas(canvasWidth, canvasHeight);
+  
+  imageDisplayArea.w = canvasWidth;
+  imageDisplayArea.h = canvasHeight;
+  imageDisplayArea.x = 0;
+  imageDisplayArea.y = 0;
+}
+
+// Generates seed points within the image display area
+function generateSeedPoints() {
+  seedPoints = [];
+  for (let i = 0; i < numSites; i++) {
+    seedPoints[i] = createVector(
+      random(imageDisplayArea.x, imageDisplayArea.x + imageDisplayArea.w),
+      random(imageDisplayArea.y, imageDisplayArea.y + imageDisplayArea.h)
+    );
+  }
+}
+
+// Handles file selection and loads new image
+function handleFileSelect(file) {
+  if (file.file && file.file.type.startsWith("image/")) {
+    let reader = new FileReader();
+    reader.onload = function(e) {
+      img = loadImage(e.target.result,
+        () => {
+          imageLoaded = true;
+          voronoiCells = [];
+          resizeCanvasForImage();
+          generateSeedPoints();
+          delaunay = calculateDelaunay(seedPoints);
+          calculateVoronoiWithColors();
+        },
+        () => {
+          alert("Failed to load image. Please try another file.");
+        }
+      );
+    };
+    reader.readAsDataURL(file.file);
+  } else {
+    alert("Please select an image file.");
   }
 }
 
@@ -130,4 +220,3 @@ function exportSVG() {
 
   console.log("SVG exported!");
 }
-

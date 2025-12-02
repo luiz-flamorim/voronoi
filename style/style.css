@@ -47,21 +47,37 @@ body {
 #button {
     padding: 20px 0;
     text-align: center;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
 }
 
-#button button {
+.material-button {
     background-color: #2d2d2d;
     color: #e0e0e0;
     border: 1px solid #404040;
     transition: all 0.2s ease;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 4px;
 }
 
-#button button:hover {
+.material-button:hover {
     background-color: #3d3d3d;
     border-color: #505050;
     color: #ffffff;
 }
 
-#button button:active {
+.material-button:active {
     background-color: #252525;
+}
+
+.material-button .material-icons {
+    font-size: 20px;
+    vertical-align: middle;
 }
